@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import axios from "axios"; 
 import BarcodeScanner from "./components/BarcodeScanner";
 import AllergyProfile from "./components/AllergyProfile";
-import "./styles.css";
+import "./styles.css"; 
 
 function App() {
   const [barcode, setBarcode] = useState(null);
@@ -10,38 +10,38 @@ function App() {
   const [productData, setProductData] = useState(null);
   const [error, setError] = useState("");
   const [isHomeScreen, setIsHomeScreen] = useState(true); 
-  const [isEditingAllergens, setIsEditingAllergens] = useState(false);
+  const [isEditingAllergens, setIsEditingAllergens] = useState(false); 
   const [showCamera, setShowCamera] = useState(true);
 
   const handleScan = (code) => {
     setBarcode(code);
-    setProductData(null); 
-    setError("");
-    setShowCamera(false); //hide camera preview after scanning
+    setProductData(null);
+    setError(""); 
+    setShowCamera(false);
     fetchProductData(code);
   };
 
   const handleSaveAllergens = (allergyList) => {
     setAllergens(allergyList);
     localStorage.setItem("allergens", JSON.stringify(allergyList)); 
-    setIsHomeScreen(true);
+    setIsHomeScreen(true); 
     setIsEditingAllergens(false); 
   };
 
   useEffect(() => {
     const savedAllergens = localStorage.getItem("allergens");
     if (savedAllergens) {
-      setAllergens(JSON.parse(savedAllergens)); //Load allergens from localStorage
+      setAllergens(JSON.parse(savedAllergens)); //allergens from localStorage
     }
   }, []);
 
   const fetchProductData = async (barcode) => {
     try {
-      setError(""); //Reset error state
-      console.log("Fetching product data for barcode:", barcode); //Debugging log
+      setError(""); 
+      console.log("Fetching product data for barcode:", barcode);
 
       const response = await axios.get(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
-      console.log("API Response:", response); //Debugging log
+      console.log("API Response:", response);
 
       const data = response.data;
       if (data.product) {
@@ -54,7 +54,7 @@ function App() {
         setProductData(null);
       }
     } catch (err) {
-      console.error("Error fetching product data:", err);
+      console.error("Error fetching product data:", err); //logging
       setError("Error fetching product data.");
     }
   };
@@ -74,7 +74,7 @@ function App() {
     } else {
       warningMessages.push({
         message: "This product is safe based on your allergens.",
-        color: "green",
+        color: "green", 
       });
     }
 
@@ -86,8 +86,8 @@ function App() {
     setBarcode(null);
     setProductData(null);
     setError("");
-    setIsEditingAllergens(false);
-    setShowCamera(true);
+    setIsEditingAllergens(false); 
+    setShowCamera(true); 
   };
 
   return (
@@ -116,7 +116,6 @@ function App() {
               <p><strong>Product:</strong> {productData?.productName || "Unknown Product"}</p>
               <p><strong>Ingredients:</strong> {productData?.ingredients || "No ingredients listed."}</p>
               
-              {/*Allergen check result with color codes*/}
               {error.length > 0 && error.map((msg, index) => (
                 <p key={index} style={{ color: msg.color }}>
                   {msg.message}
@@ -128,7 +127,7 @@ function App() {
           {/*show scanner if no barcode has been scanned*/}
           {!barcode && <BarcodeScanner onScan={handleScan} />}
           
-          
+          {/*show camera preview only if no barcode scanned*/}
           {!barcode && showCamera && <div className="camera-preview">Camera Preview</div>}
 
           <div className="action-buttons">
@@ -137,7 +136,7 @@ function App() {
               <button 
                 onClick={() => {
                   setBarcode(null);
-                  setShowCamera(true); // Show camera again for new scan
+                  setShowCamera(true);
                 }}
               >
                 Scan Another
@@ -155,10 +154,9 @@ function App() {
         </div>
       )}
 
-      {/* Disclaimer */}
       <footer>
         <p className="disclaimer">
-          Disclaimer: This app is in beta and may not be fully accurate. Please double check ingredients for your safety.
+          Disclaimer: This app is in beta and may not be fully accurate. Please double-check ingredients.
         </p>
       </footer>
     </div>

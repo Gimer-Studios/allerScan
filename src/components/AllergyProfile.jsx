@@ -27,7 +27,7 @@ function AllergyProfile({ onSave, allergens = [] }) {
   };
 
   const handleSave = () => {
-    onSave(tags); 
+    onSave(tags);
   };
 
   return (

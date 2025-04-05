@@ -1,4 +1,3 @@
-// In BarcodeScanner.jsx
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { useEffect } from "react";
 
@@ -9,7 +8,9 @@ const BarcodeScanner = ({ onScan }) => {
       qrbox: { width: 250, height: 250 },
       showTorchButtonIfSupported: false,
       rememberLastUsedCamera: true,
-      supportedScanTypes: [0]
+      supportedScanTypes: [0],
+      showStartScanButton: false,
+      showScanTypeSelector: false
     });
 
     scanner.render(
