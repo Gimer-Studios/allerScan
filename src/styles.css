@@ -65,7 +65,13 @@ button:active {
 }
 
 .camera-preview {
-  display: none !important; 
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: #1e1e1e;
 }
 
 .error-bar {
@@ -273,23 +279,42 @@ footer {
 }
 
 #reader__dashboard_section_csr button {
-  display: none !important;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  margin: 5px;
+  cursor: pointer;
 }
 
 #reader__dashboard_section_swaplink {
-  display: none !important;
+  color: #4CAF50 !important;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+#reader__filescan_input {
+  display: block !important;
+  margin: 10px auto;
 }
 
 #html5-qrcode-button-camera-stop {
-  display: none !important;
+  background-color: #f44336 !important;
+  color: white !important;
+  border: none !important;
+  padding: 8px 16px !important;
+  border-radius: 20px !important;
+  margin: 5px !important;
 }
 
 #html5-qrcode-button-camera-start {
-  display: none !important;
-}
-
-#reader__dashboard_section_csr > div:nth-child(2) > button:nth-child(2) {
-  display: none !important;
+  background-color: #4CAF50 !important;
+  color: white !important;
+  border: none !important;
+  padding: 8px 16px !important;
+  border-radius: 20px !important;
+  margin: 5px !important;
 }
 
 .tags-container {
@@ -341,7 +366,6 @@ footer {
   margin: 20px auto 10px;
 }
 
-/* Scanned product information styling */
 .product-result p {
   text-align: center;
   max-width: 100%;
@@ -372,6 +396,12 @@ footer {
   margin: 0;
 }
 
+.scanning-controls {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px 0;
+}
 
 @media (max-width: 768px) {
   body {
@@ -472,26 +502,6 @@ footer {
     font-size: 14px;
     padding: 0 5px;
   }
-}
-
-#reader__dashboard_section_swaplink {
-  display: none !important;
-}
-
-#reader__filescan_input {
-  display: none !important;
-}
-
-#reader__filescan_input + div {
-  display: none !important;
-}
-
-.camera-preview {
-  display: none !important;
-}
-
-.scanning-controls {
-  display: none !important;
 }
 
 .disclaimer {
