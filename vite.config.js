@@ -14,6 +14,7 @@ export default defineConfig({
         display: 'standalone',
         background_color: '#ffffff',
         theme_color: '#ffffff',
+        base: "/allerScan",
         icons: [
           {
             src: 'pwa-192x192.png',

@@ -37,35 +37,53 @@ function App() {
 
   const fetchProductData = async (barcode) => {
     try {
-      setError(""); 
+      setError([]); 
       console.log("Fetching product data for barcode:", barcode);
-
+  
       const response = await axios.get(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
       console.log("API Response:", response);
-
+  
       const data = response.data;
       if (data.product) {
-        const productName = data.product.product_name;
+        const productName = data.product.product_name || "Unknown Product";
         const ingredients = data.product.ingredients_text || "";
         setProductData({ productName, ingredients });
-        checkForAllergens(ingredients);
+  
+        if (ingredients) {
+          checkForAllergens(ingredients);
+        } else {
+          setError([{
+            message: "No ingredients information available for this product.",
+            color: "yellow",
+          }]);
+        }
       } else {
-        setError("Product not found!");
-        setProductData(null);
+        setError([{
+          message: "Product not found! You may try scanning again as it may have been scanned incorrectly.",
+          color: "yellow",
+        }]);
+        setProductData({ productName: "Unknown Product", ingredients: "No ingredients available" });
       }
     } catch (err) {
-      console.error("Error fetching product data:", err); //logging
-      setError("Error fetching product data.");
+      console.error("Error fetching product data:", err);
+      setError([{
+        message: "Error fetching product data.",
+        color: "yellow",
+      }]);
+      setProductData({ productName: "Unknown Product", ingredients: "No ingredients available" });
     }
   };
 
   const checkForAllergens = (ingredients) => {
     if (!allergens || !ingredients) return;
-    const foundAllergens = allergens.filter((allergen) =>
-      ingredients.toLowerCase().includes(allergen)
-    );
-    const warningMessages = [];
+    const ingredientsLower = ingredients.toLowerCase();
 
+    const foundAllergens = allergens.filter((allergen) =>
+      ingredientsLower.includes(allergen.toLowerCase())
+    );
+    
+    const warningMessages = [];
+  
     if (foundAllergens.length > 0) {
       warningMessages.push({
         message: `Warning: This product contains ${foundAllergens.join(", ")}`,
@@ -77,10 +95,10 @@ function App() {
         color: "green", 
       });
     }
-
+  
     setError(warningMessages);
   };
-
+  
   const handleReturnHome = () => {
     setIsHomeScreen(true);
     setBarcode(null);

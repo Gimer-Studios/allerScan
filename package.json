@@ -1,5 +1,6 @@
 {
   "name": "allerscan",
+  "homepage": "https://gimer-studios.github.io/allerScan/",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -8,12 +9,16 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "axios": "^1.8.4",
+    "gh-pages": "^6.3.0",
     "html5-qrcode": "^2.3.8",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-qr-barcode-scanner": "^2.1.0",
     "react-router-dom": "^7.5.0"
   },
   "devDependencies": {
