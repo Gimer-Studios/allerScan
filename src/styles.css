@@ -136,10 +136,13 @@ footer {
 }
 
 .edit-allergens {
-  margin-top: 15px;
-  padding: 15px;
-  border-radius: 12px;
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  margin: 15px auto;
+  padding: 12px 24px;
   background-color: #1e1e1e;
+  border-radius: 50px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
@@ -363,8 +366,12 @@ footer {
 
 .save-allergens {
   display: block;
+  width: 100%;
+  max-width: 300px;
   margin: 20px auto 10px;
+  padding: 12px 24px;
 }
+
 
 .product-result p {
   text-align: center;
@@ -380,15 +387,13 @@ footer {
 }
 
 .action-buttons {
-  margin: 20px 0;
+  margin: 20px auto;
   display: flex;
   flex-direction: column;
-  align-items: center; 
+  align-items: center;
   gap: 10px;
   width: 100%;
   max-width: 300px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .action-buttons button {

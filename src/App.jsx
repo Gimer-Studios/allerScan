@@ -6,7 +6,7 @@ import "./styles.css";
 
 function App() {
   const [barcode, setBarcode] = useState(null);
-  const [allergens, setAllergens] = useState(null);
+  const [allergens, setAllergens] = useState([]);  // Initialize as an empty array
   const [productData, setProductData] = useState(null);
   const [error, setError] = useState("");
   const [isHomeScreen, setIsHomeScreen] = useState(true); 
@@ -22,16 +22,54 @@ function App() {
   };
 
   const handleSaveAllergens = (allergyList) => {
-    setAllergens(allergyList);
-    localStorage.setItem("allergens", JSON.stringify(allergyList)); 
-    setIsHomeScreen(true); 
-    setIsEditingAllergens(false); 
+    console.log("handleSaveAllergens called with:", allergyList);
+    
+    // Only save if the allergyList is not empty and is an array
+    if (Array.isArray(allergyList) && allergyList.length > 0) {
+      setAllergens(allergyList);
+      localStorage.setItem("allergens", JSON.stringify(allergyList));
+      setIsHomeScreen(true);
+      setIsEditingAllergens(false);
+      console.log("Allergens saved successfully:", allergyList);
+    } else {
+      console.log("No allergens to save or invalid data");
+      // Notify user they need to add at least one allergen
+      setError([{
+        message: "Please add at least one allergen before saving.",
+        color: "yellow",
+      }]);
+    }
   };
 
   useEffect(() => {
-    const savedAllergens = localStorage.getItem("allergens");
-    if (savedAllergens) {
-      setAllergens(JSON.parse(savedAllergens)); //allergens from localStorage
+    // Load saved allergens from localStorage
+    try {
+      const savedAllergens = localStorage.getItem("allergens");
+      console.log("Retrieved from localStorage:", savedAllergens);
+      
+      if (savedAllergens) {
+        const parsed = JSON.parse(savedAllergens);
+        
+        // Validate the parsed data is an array
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setAllergens(parsed);
+          console.log("Loaded allergens from localStorage:", parsed);
+        } else {
+          console.log("Parsed data is not a valid array or is empty");
+          // Initialize as empty array if data is invalid
+          setAllergens([]);
+        }
+      } else {
+        console.log("No allergens found in localStorage");
+        // Explicitly set allergens as empty array
+        setAllergens([]);
+      }
+    } catch (error) {
+      console.error("Error loading allergens from localStorage:", error);
+      // Clear potentially corrupted localStorage
+      localStorage.removeItem("allergens");
+      // Initialize as empty array if there was an error
+      setAllergens([]);
     }
   }, []);
 
@@ -114,8 +152,9 @@ function App() {
 
       {isHomeScreen ? (
         <>
-          {!allergens ? (
-            <AllergyProfile onSave={handleSaveAllergens} />
+          {/* Use length check for allergens array */}
+          {allergens.length === 0 ? (
+            <AllergyProfile onSave={handleSaveAllergens} allergens={[]} />
           ) : (
             <div>
               <p>Your allergens have been saved. Start scanning products now!</p>
@@ -134,7 +173,7 @@ function App() {
               <p><strong>Product:</strong> {productData?.productName || "Unknown Product"}</p>
               <p><strong>Ingredients:</strong> {productData?.ingredients || "No ingredients listed."}</p>
               
-              {error.length > 0 && error.map((msg, index) => (
+              {Array.isArray(error) && error.length > 0 && error.map((msg, index) => (
                 <p key={index} style={{ color: msg.color }}>
                   {msg.message}
                 </p>
@@ -162,7 +201,9 @@ function App() {
             )}
           </div>
 
-          <p><strong>Your Allergens:</strong> {allergens.join(", ")}</p>
+          {allergens.length > 0 && (
+            <p><strong>Your Allergens:</strong> {allergens.join(", ")}</p>
+          )}
         </div>
       )}
 

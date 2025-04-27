@@ -1,53 +1,108 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 function AllergyProfile({ onSave, allergens = [] }) {
   const [allergenInput, setAllergenInput] = useState("");
-  const [tags, setTags] = useState(allergens);
-
-  useEffect(() => {
-    setTags(allergens); //set the allergens list when it changes
-  }, [allergens]);
+  const [allergenList, setAllergenList] = useState(allergens || []);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleInputChange = (e) => {
     setAllergenInput(e.target.value);
+    if (errorMessage) setErrorMessage("");
   };
 
-  const handleAddTag = (e) => {
-    if (e.key === "Enter" || e.key === ",") {
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
       e.preventDefault();
-      if (allergenInput && !tags.includes(allergenInput)) {
-        setTags([...tags, allergenInput]);
-        setAllergenInput("");
-      }
+      handleAddAllergen();
     }
   };
 
-  const handleRemoveTag = (removedTag) => {
-    setTags(tags.filter(tag => tag !== removedTag));
+  const handleAddAllergen = () => {
+    const trimmedInput = allergenInput.trim();
+    
+    if (!trimmedInput) {
+      return;
+    }
+    
+    if (!allergenList.includes(trimmedInput)) {
+      const newList = [...allergenList, trimmedInput];
+      setAllergenList(newList);
+      setAllergenInput("");
+      console.log("Added allergen:", trimmedInput, "New list:", newList);
+    } else {
+      setErrorMessage(`"${trimmedInput}" is already in your allergen list`);
+    }
   };
 
-  const handleSave = () => {
-    onSave(tags);
+  const handleRemoveAllergen = (allergenToRemove) => {
+    setAllergenList(allergenList.filter(item => item !== allergenToRemove));
+  };
+
+  const handleSaveAllergens = () => {
+    if (allergenList.length === 0) {
+      if (allergenInput.trim()) {
+        onSave([allergenInput.trim()]);
+        console.log("Saving allergen from input:", allergenInput.trim());
+      } else {
+        setErrorMessage("Please add at least one allergen before saving");
+      }
+    } else {
+      onSave(allergenList);
+      console.log("Saving allergen list:", allergenList);
+    }
   };
 
   return (
     <div className="allergy-profile">
       <h2>Edit Your Allergens</h2>
+      
       <div className="tags-container">
-        {tags.map((tag, index) => (
+        {allergenList.map((allergen, index) => (
           <span key={index} className="tag">
-            {tag} <button onClick={() => handleRemoveTag(tag)} className="remove-tag">x</button>
+            {allergen}
+            <button 
+              type="button"
+              onClick={() => handleRemoveAllergen(allergen)} 
+              className="remove-tag"
+            >
+              x
+            </button>
           </span>
         ))}
       </div>
-      <input
-        type="text"
-        value={allergenInput}
-        onChange={handleInputChange}
-        onKeyDown={handleAddTag}
-        placeholder="Add an allergen (e.g., peanuts, eggs)"
-      />
-      <button onClick={handleSave} className="save-allergens">Save Allergens</button>
+      
+      {errorMessage && (
+        <p className="error-message">{errorMessage}</p>
+      )}
+      
+      <div className="allergen-input-container">
+        <input
+          type="text"
+          value={allergenInput}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          placeholder="Add an allergen (e.g., peanuts, eggs)"
+        />
+        <button 
+          type="button" 
+          onClick={handleAddAllergen} 
+          className="add-allergen-btn"
+        >
+          Add
+        </button>
+      </div>
+      
+      <button 
+        type="button"
+        onClick={handleSaveAllergens} 
+        className="save-allergens"
+      >
+        Save Allergens
+      </button>
+      
+      <p className="helper-text">
+        Common allergens: milk, eggs, peanuts, tree nuts, soy, wheat, fish, shellfish
+      </p>
     </div>
   );
 }
