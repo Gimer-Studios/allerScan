@@ -8,34 +8,33 @@ function App() {
   const [barcode, setBarcode] = useState(null);
   const [allergens, setAllergens] = useState([]); 
   const [productData, setProductData] = useState(null);
-  const [error, setError] = useState("");
+  const [alerts, setAlerts] = useState([]);
   const [isHomeScreen, setIsHomeScreen] = useState(true); 
   const [isEditingAllergens, setIsEditingAllergens] = useState(false); 
   const [showCamera, setShowCamera] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showIngredients, setShowIngredients] = useState(false);
 
   const handleScan = (code) => {
     setBarcode(code);
     setProductData(null);
-    setError(""); 
+    setAlerts([]);
     setShowCamera(false);
     fetchProductData(code);
   };
 
   const handleSaveAllergens = (allergyList) => {
     console.log("handleSaveAllergens called with:", allergyList);
-    if (Array.isArray(allergyList) && allergyList.length > 0) {
-      setAllergens(allergyList);
-      localStorage.setItem("allergens", JSON.stringify(allergyList));
-      setIsHomeScreen(true);
-      setIsEditingAllergens(false);
-      console.log("Allergens saved successfully:", allergyList);
-    } else {
-      console.log("No allergens to save or invalid data");
-      //user needs atleast one allergen
-      setError([{
-        message: "Please add at least one allergen before saving.",
-        color: "yellow",
+    setAllergens(allergyList);
+    localStorage.setItem("allergens", JSON.stringify(allergyList));
+    
+    if (allergyList.length > 0) {
+      setAlerts([{
+        message: "Allergens saved successfully!",
+        type: "success",
+        icon: "✓"
       }]);
+      console.log("Allergens saved successfully:", allergyList);
     }
   };
 
@@ -59,48 +58,71 @@ function App() {
       }
     } catch (error) {
       console.error("Error loading allergens from localStorage:", error);
-      //clear localStorage
+      //clear localStorage if corrupted
       localStorage.removeItem("allergens");
       setAllergens([]);
     }
   }, []);
 
-  const fetchProductData = async (barcode) => {
+  const fetchProductData = async (barcodeValue) => {
     try {
-      setError([]); 
-      console.log("Fetching product data for barcode:", barcode);
+      setIsLoading(true);
+      setAlerts([]); 
+      console.log("Fetching product data for barcode:", barcodeValue);
   
-      const response = await axios.get(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+      const response = await axios.get(`https://world.openfoodfacts.org/api/v0/product/${barcodeValue}.json`);
       console.log("API Response:", response);
   
       const data = response.data;
       if (data.product) {
         const productName = data.product.product_name || "Unknown Product";
         const ingredients = data.product.ingredients_text || "";
-        setProductData({ productName, ingredients });
+        const brands = data.product.brands || "";
+        const categories = data.product.categories || "";
+        
+        setProductData({ 
+          productName, 
+          ingredients, 
+          brands,
+          categories,
+          barcode: barcodeValue
+        });
   
         if (ingredients) {
           checkForAllergens(ingredients);
         } else {
-          setError([{
+          setAlerts([{
             message: "No ingredients information available for this product.",
-            color: "yellow",
+            type: "warning",
+            icon: "ℹ️"
           }]);
         }
       } else {
-        setError([{
-          message: "Product not found! You may try scanning again as it may have been scanned incorrectly.",
-          color: "yellow",
+        setAlerts([{
+          message: "Product not found! Try scanning again - the barcode may have been read incorrectly.",
+          type: "warning",
+          icon: "❓"
         }]);
-        setProductData({ productName: "Unknown Product", ingredients: "No ingredients available" });
+        setProductData({ 
+          productName: "Unknown Product", 
+          ingredients: "No ingredients available",
+          barcode: barcodeValue
+        });
       }
     } catch (err) {
       console.error("Error fetching product data:", err);
-      setError([{
-        message: "Error fetching product data.",
-        color: "yellow",
+      setAlerts([{
+        message: "Unable to fetch product data. Please check your internet connection.",
+        type: "danger",
+        icon: "⚠️"
       }]);
-      setProductData({ productName: "Unknown Product", ingredients: "No ingredients available" });
+      setProductData({ 
+        productName: "Unknown Product", 
+        ingredients: "No ingredients available",
+        barcode: barcodeValue
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -112,30 +134,155 @@ function App() {
       ingredientsLower.includes(allergen.toLowerCase())
     );
     
-    const warningMessages = [];
+    const alertMessages = [];
   
     if (foundAllergens.length > 0) {
-      warningMessages.push({
-        message: `Warning: This product contains ${foundAllergens.join(", ")}`,
-        color: "red",
+      alertMessages.push({
+        message: `⚠️ WARNING: Contains ${foundAllergens.join(", ")} - Not safe for you!`,
+        type: "danger",
+        icon: "🚨"
       });
     } else {
-      warningMessages.push({
-        message: "This product is safe based on your allergens.",
-        color: "green", 
+      alertMessages.push({
+        message: "✅ Safe to consume based on your registered allergens",
+        type: "success", 
+        icon: "✓"
       });
     }
   
-    setError(warningMessages);
+    setAlerts(alertMessages);
   };
   
   const handleReturnHome = () => {
     setIsHomeScreen(true);
     setBarcode(null);
     setProductData(null);
-    setError("");
+    setAlerts([]);
     setIsEditingAllergens(false); 
     setShowCamera(true); 
+    setShowIngredients(false);
+  };
+
+  const handleStartScanning = () => {
+    setIsHomeScreen(false);
+    setBarcode(null);
+    setProductData(null);
+    setAlerts([]);
+    setShowCamera(true);
+    setShowIngredients(false);
+  };
+
+  const handleScanAnother = () => {
+    setBarcode(null);
+    setProductData(null);
+    setAlerts([]);
+    setShowCamera(true);
+    setShowIngredients(false);
+  };
+
+  const AlertComponent = ({ alerts }) => {
+    if (!alerts || alerts.length === 0) return null;
+    
+    return (
+      <div className="alerts-container">
+        {alerts.map((alert, index) => (
+          <div key={index} className={`alert alert-${alert.type}`}>
+            <span className="alert-icon">{alert.icon}</span>
+            <span>{alert.message}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const ProductCard = ({ product, isLoading }) => {
+    if (isLoading) {
+      return (
+        <div className="card">
+          <div className="loading">
+            <div className="loading-spinner"></div>
+            <span>Loading product information...</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (!product) return null;
+
+    return (
+      <div className="product-card">
+        <div className="product-header">
+          <div className="product-icon">📦</div>
+          <div className="product-info">
+            <h3>{product.productName}</h3>
+            <div className="product-barcode">{product.barcode}</div>
+          </div>
+        </div>
+        
+        {product.brands && (
+          <div className="product-detail">
+            <strong>Brand:</strong> {product.brands}
+          </div>
+        )}
+        
+        <div className="ingredients-section">
+          <div className="ingredients-header" onClick={() => setShowIngredients(!showIngredients)}>
+            <h4>🧾 Ingredients</h4>
+            <span className="dropdown-arrow">{showIngredients ? '▼' : '▶'}</span>
+          </div>
+          {showIngredients && (
+            <div className="ingredients-text">
+              {product.ingredients || "No ingredients information available"}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const AllergenDisplay = () => {
+    if (allergens.length === 0 && !isEditingAllergens) {
+      return (
+        <div className="your-allergens">
+          <h4>🚫 Your Allergens</h4>
+          <p className="no-allergens-text">No allergens added yet</p>
+          <button className="btn btn-secondary" onClick={() => setIsEditingAllergens(true)}>
+            ⚙️ Add Allergens
+          </button>
+        </div>
+      );
+    }
+
+    if (isEditingAllergens) {
+      return (
+        <div className="your-allergens">
+          <AllergyProfile onSave={handleSaveAllergens} allergens={allergens} />
+          <button 
+            className="btn btn-secondary" 
+            onClick={() => setIsEditingAllergens(false)}
+            style={{ marginTop: '1rem' }}
+          >
+            Close
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="your-allergens">
+        <h4>🚫 Your Allergens</h4>
+        <div className="allergen-list">
+          {allergens.map((allergen, index) => (
+            <span key={index} className="allergen-chip">
+              {allergen}
+            </span>
+          ))}
+        </div>
+        <button className="btn btn-secondary" onClick={() => setIsEditingAllergens(true)}>
+          ⚙️ Edit Allergens
+        </button>
+      </div>
+    );
   };
 
   return (
@@ -143,65 +290,76 @@ function App() {
       <h1>AllerScan</h1>
 
       {isHomeScreen ? (
-        <>
-          {/*use length check for allergens array*/}
-          {allergens.length === 0 ? (
-            <AllergyProfile onSave={handleSaveAllergens} allergens={[]} />
-          ) : (
-            <div>
-              <p>Your allergens have been saved. Start scanning products now!</p>
-              <button onClick={() => setIsHomeScreen(false)}>Start Scanning</button>
-              <button onClick={() => setIsEditingAllergens(true)} className="edit-allergens">
-                Edit Allergens
-              </button>
+        <div className="home-content">
+          {allergens.length === 0 && !isEditingAllergens ? (
+            <div className="card">
+              <AllergyProfile onSave={handleSaveAllergens} allergens={[]} />
             </div>
-          )}
-        </>
-      ) : (
-        <div className={barcode ? "product-result" : "scanning-mode"}>
-          {barcode && (
+          ) : (
             <>
-              <p><strong>Scanned Barcode:</strong> {barcode}</p>
-              <p><strong>Product:</strong> {productData?.productName || "Unknown Product"}</p>
-              <p><strong>Ingredients:</strong> {productData?.ingredients || "No ingredients listed."}</p>
+              <div className="welcome-message">
+                <p>Great! Your allergens are saved.</p>
+                <p>Ready to scan products and stay safe!</p>
+              </div>
               
-              {Array.isArray(error) && error.length > 0 && error.map((msg, index) => (
-                <p key={index} style={{ color: msg.color }}>
-                  {msg.message}
-                </p>
-              ))}
+              <div className="action-buttons">
+                <button className="btn" onClick={handleStartScanning}>
+                  Start Scanning
+                </button>
+              </div>
+
+              <AllergenDisplay />
             </>
           )}
-          
-          {/*show scanner if no barcode has been scanned*/}
-          {!barcode && <BarcodeScanner onScan={handleScan} />}
-          
-          {/*show camera preview only if no barcode scanned*/}
-          {!barcode && showCamera && <div className="camera-preview">Camera Preview</div>}
-
-          <div className="action-buttons">
-            <button onClick={handleReturnHome} className="return-home">Return to Home Screen</button>
-            {barcode && (
-              <button 
-                onClick={() => {
-                  setBarcode(null);
-                  setShowCamera(true);
-                }}
-              >
-                Scan Another
-              </button>
-            )}
-          </div>
-
-          {allergens.length > 0 && (
-            <p><strong>Your Allergens:</strong> {allergens.join(", ")}</p>
-          )}
         </div>
-      )}
+      ) : (
+        <div className="scanner-container">
+          {!barcode ? (
+            <>
+              <div className="card">
+                <h2>📸 Scan Product Barcode</h2>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+                  Point your camera at the barcode on the product
+                </p>
+                <div className="scanner-frame">
+                  <BarcodeScanner onScan={handleScan} />
+                  <div className="scanning-overlay"></div>
+                </div>
+              </div>
+              
+              <button className="btn btn-secondary" onClick={handleReturnHome}>
+                Return Home
+              </button>
+            </>
+          ) : (
+            <div className="product-result">
+              <AlertComponent alerts={alerts} />
+              
+              <ProductCard product={productData} isLoading={isLoading} />
+              
+              <div className="action-buttons">
+                <button className="btn" onClick={handleScanAnother}>
+                  Scan Another
+                </button>
+                <button className="btn btn-secondary" onClick={handleReturnHome}>
+                  Return Home
+                </button>
+              </div>
 
-      {isEditingAllergens && (
-        <div className="edit-allergens-screen">
-          <AllergyProfile onSave={handleSaveAllergens} allergens={allergens} />
+              {allergens.length > 0 && (
+                <div className="your-allergens">
+                  <h4>🚫 Your Current Allergens</h4>
+                  <div className="allergen-list">
+                    {allergens.map((allergen, index) => (
+                      <span key={index} className="allergen-chip">
+                        {allergen}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

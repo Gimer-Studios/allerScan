@@ -1,9 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function AllergyProfile({ onSave, allergens = [] }) {
   const [allergenInput, setAllergenInput] = useState("");
   const [allergenList, setAllergenList] = useState(allergens || []);
   const [errorMessage, setErrorMessage] = useState("");
+
+  //update local state when allergens prop changes
+  useEffect(() => {
+    setAllergenList(allergens || []);
+  }, [allergens]);
 
   const handleInputChange = (e) => {
     setAllergenInput(e.target.value);
@@ -28,6 +33,7 @@ function AllergyProfile({ onSave, allergens = [] }) {
       const newList = [...allergenList, trimmedInput];
       setAllergenList(newList);
       setAllergenInput("");
+      onSave(newList); //save when adding
       console.log("Added allergen:", trimmedInput, "New list:", newList);
     } else {
       setErrorMessage(`"${trimmedInput}" is already in your allergen list`);
@@ -35,21 +41,9 @@ function AllergyProfile({ onSave, allergens = [] }) {
   };
 
   const handleRemoveAllergen = (allergenToRemove) => {
-    setAllergenList(allergenList.filter(item => item !== allergenToRemove));
-  };
-
-  const handleSaveAllergens = () => {
-    if (allergenList.length === 0) {
-      if (allergenInput.trim()) {
-        onSave([allergenInput.trim()]);
-        console.log("Saving allergen from input:", allergenInput.trim());
-      } else {
-        setErrorMessage("Please add at least one allergen before saving");
-      }
-    } else {
-      onSave(allergenList);
-      console.log("Saving allergen list:", allergenList);
-    }
+    const newList = allergenList.filter(item => item !== allergenToRemove);
+    setAllergenList(newList);
+    onSave(newList); //save when removing
   };
 
   return (
@@ -82,6 +76,7 @@ function AllergyProfile({ onSave, allergens = [] }) {
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           placeholder="Add an allergen (e.g., peanuts, eggs)"
+          className="allergen-input"
         />
         <button 
           type="button" 
@@ -91,14 +86,6 @@ function AllergyProfile({ onSave, allergens = [] }) {
           Add
         </button>
       </div>
-      
-      <button 
-        type="button"
-        onClick={handleSaveAllergens} 
-        className="save-allergens"
-      >
-        Save Allergens
-      </button>
       
       <p className="helper-text">
         Common allergens: milk, eggs, peanuts, tree nuts, soy, wheat, fish, shellfish
